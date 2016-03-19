@@ -60,7 +60,7 @@ RUN git clone git://code.qt.io/qt/qt5.git qt_src
 WORKDIR qt_src
 RUN git checkout 5.6
 RUN git submodule update --init  
-RUN ./configure -developer-build -opensource -confirm-license -opensource -nomake examples -nomake tests -prefix /opt/qt5
+RUN ./configure -opensource -confirm-license -release -nomake examples -nomake tests -prefix /opt/qt5
 RUN make -j6
 RUN make install
 WORKDIR /opt
