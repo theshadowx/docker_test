@@ -1,101 +1,65 @@
-FROM ubuntu:14.04.4
-MAINTAINER Ali Diouri <alidiouri@gmail.com>
- 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV ANDROID_HOME=/opt/android_sdk
-ENV ANDROID_SDK_ROOT=${ANDROID_HOME}
-ENV ANDROID_NDK_ROOT=/opt/android_ndk
-ENV ANDROID_NDK_TOOLCHAIN_PREFIX=arm-linux-androideabi
-ENV ANDROID_NDK_TOOLCHAIN_VERSION=4.9
-ENV ANDROID_NDK_HOST=linux-x86_64
-ENV ANDROID_NDK_PLATFORM=android-21
+# Minimal docker container to build project
+# Image: rabits/qt:5.4-android
+
+FROM ubuntu:14.04
+MAINTAINER Rabit <home@rabits.org> (@rabits)
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV QT_PATH /opt/Qt
+ENV QT_ANDROID ${QT_PATH}/5.4/android_armv7
+ENV ANDROID_HOME /opt/android-sdk-linux
+ENV ANDROID_SDK_ROOT ${ANDROID_HOME}
+ENV ANDROID_NDK_ROOT /opt/android-ndk
+ENV ANDROID_NDK_TOOLCHAIN_PREFIX arm-linux-androideabi
+ENV ANDROID_NDK_TOOLCHAIN_VERSION 4.9
+ENV ANDROID_NDK_HOST linux-x86_64
+ENV ANDROID_NDK_PLATFORM android-21
 ENV ANDROID_NDK_TOOLS_PREFIX ${ANDROID_NDK_TOOLCHAIN_PREFIX}
-ENV QT_PATH=/opt/Qt
-ENV QT_ANDROID_ARM=${QT_PATH}/5.6/android_armv7
-ENV QMAKESPEC=android-g++
-ENV PATH=a${PATH}:${QT_ANDROID_ARM}/bin:${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools
+ENV QMAKESPEC android-g++
+ENV PATH ${PATH}:${QT_ANDROID}/bin:${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools
 
+# Install updates & requirements:
+#  * git, openssh-client, ca-certificates - clone & build
+#  * curl, p7zip - to download & unpack Qt bundle
+#  * make, default-jdk, ant - basic build requirements
+#  * libsm6, libice6, libxext6, libxrender1, libfontconfig1 - dependencies of Qt bundle run-file
+#  * libc6:i386, libncurses5:i386, libstdc++6:i386, libz1:i386 - dependencides of android sdk binaries
+RUN sudo dpkg --add-architecture i386 && apt-get -qq update && apt-get -qq dist-upgrade && apt-get install -qq -y --no-install-recommends \
+    git \
+    openssh-client \
+    ca-certificates \
+    make \
+    default-jdk \
+    ant \
+    curl \
+    p7zip \
+    libsm6 \
+    libice6 \
+    libxext6 \
+    libxrender1 \
+    libfontconfig1 \
+    libc6:i386 \
+    libncurses5:i386 \
+    libstdc++6:i386 \
+    libz1:i386 \
+    && apt-get -qq clean
 
-RUN sudo apt-get update                                       &&  \
-    sudo apt-get -y upgrade                                   &&  \
-    sudo apt-get install -y                                       \
-       default-jdk                                                \
-       nano                                                       \
-       wget                                                       \
-       unzip                                                      \
-       git                                                        \
-       perl                                                       \
-       python                                                     \
-       python2.7                                                  \
-       g++                                                        \
-       make                                                       \
-       build-essential                                            \
-       openssl                                                    \
-       "^libxcb.*"                                                \
-       libx11-xcb-dev                                             \
-       libglu1-mesa-dev                                           \
-       libxrender-dev                                             \
-       libxi-dev                                                  \
-       flex                                                       \
-       bison                                                      \
-       gperf                                                      \
-       libicu-dev                                                 \
-       libxslt-dev                                                \
-       ruby                                                       \
-       libssl-dev                                                 \
-       libxcursor-dev                                             \
-       libxcomposite-dev                                          \
-       libxdamage-dev                                             \
-       libxrandr-dev                                              \
-       libfontconfig1-dev                                         \
-       libcap-dev                                                 \
-       libbz2-dev                                                 \
-       libgcrypt11-dev                                            \
-       libpci-dev                                                 \
-       libnss3-dev                                                \
-       libxcursor-dev                                             \
-       libxcomposite-dev                                          \
-       libxdamage-dev                                             \
-       libxrandr-dev                                              \
-       libdrm-dev                                                 \
-       libfontconfig1-dev                                         \
-       libxtst-dev                                                \
-       libasound2-dev                                             \
-       libcups2-dev                                               \
-       libpulse-dev                                               \
-       libudev-dev                                                \
-       libssl-dev                                                 \
-       libxss-dev                                                 \
-       libatkmm-1.6-dev                                           \
-       libasound2-dev                                             \
-       libgstreamer0.10-dev                                       \
-       libgstreamer-plugins-base0.10-dev                        &&\
-    apt-get build-dep -y qt5-default
+# Download & unpack Qt 5.4 toolchains & clean
+RUN mkdir -p /tmp/qt \
+    && curl -Lo /tmp/qt/installer.run 'http://download.qt-project.org/official_releases/qt/5.4/5.4.2/qt-opensource-linux-x64-android-5.4.2.run' \
+    && chmod +x /tmp/qt/installer.run && /tmp/qt/installer.run --dump-binary-data -o /tmp/qt/data \
+    && mkdir $QT_PATH && cd $QT_PATH \
+    && 7zr x /tmp/qt/data/qt.54.android_armv7/5.4.2-0qt5_essentials.7z > /dev/null \
+    && 7zr x /tmp/qt/data/qt.54.android_armv7/5.4.2-0qt5_addons.7z > /dev/null \
+    && /tmp/qt/installer.run --runoperation QtPatch linux $QT_ANDROID qt5 \
+    && rm -rf /tmp/qt
 
+# Download & unpack android SDK
+RUN mkdir /tmp/android && curl -Lo /tmp/android/sdk.tgz 'http://dl.google.com/android/android-sdk_r24.4.1-linux.tgz' \
+    && tar --no-same-owner -xf /tmp/android/sdk.tgz -C /opt \
+    && rm -rf /tmp/android && echo "y" | android update sdk -u -a -t tools,platform-tools,build-tools-21.1.2,$ANDROID_NDK_PLATFORM
 
-WORKDIR /opt
-RUN wget http://dl.google.com/android/android-sdk_r24.4.1-linux.tgz && tar zxvf android-sdk_r24.4.1-linux.tgz && mv android-sdk-linux $ANDROID_SDK_ROOT && rm -rf /opt/android-sdk_r24.4.1-linux.tgz
-RUN wget http://dl.google.com/android/repository/android-ndk-r11b-linux-x86_64.zip && unzip android-ndk-r11b-linux-x86_64.zip && mv android-ndk-r11b $ANDROID_NDK_ROOT && rm -rf android-ndk-r11b-linux-x86_64.zip
-RUN echo "y" | android update sdk -u -a -t tools,platform-tools,build-tools-21.1.2,${ANDROID_NDK_PLATFORM}
-RUN wget http://download.qt.io/official_releases/qt/5.6/5.6.0/single/qt-everywhere-opensource-src-5.6.0.tar.gz  \
-    && tar zxvf qt-everywhere-opensource-src-5.6.0.tar.gz \
-    && mv qt-everywhere-opensource-src-5.6.0 qt_src \
-    && rm -rf qt-everywhere-opensource-src-5.6.0.tar.gz \
-    && cd /opt/qt_src
-WORKDIR /opt/qt_src
-RUN  ./configure \
-     -opensource -confirm-license \
-     -release \
-     -xplatform ${QMAKESPEC} \
-     -nomake tests -nomake examples \
-     -android-ndk ${ANDROID_NDK_ROOT} \
-     -android-sdk ${ANDROID_SDK_ROOT} \
-     -android-ndk-host ${ANDROID_NDK_HOST} \
-     -android-toolchain-version ${ANDROID_NDK_TOOLCHAIN_VERSION} \
-     -skip qttranslations -skip qtserialport \
-     -no-warnings-are-errors \
-     -prefix ${QT_ANDROID_ARM} && \
-     make -j6 && make install && \
-     echo "y" | rm -rf  /opt/qt_src
-WORKDIR /root
-
+# Download & unpack android NDK
+RUN mkdir /tmp/android && cd /tmp/android && curl -Lo ndk.bin 'http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin' \
+    && chmod +x ndk.bin && ./ndk.bin > /dev/null && mv android-ndk-r10e $ANDROID_NDK_ROOT && chmod -R +rX $ANDROID_NDK_ROOT \
+    && rm -rf /tmp/android
