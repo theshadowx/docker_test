@@ -1,12 +1,12 @@
 # Minimal docker container to build project
 # Image: rabits/qt:5.4-android
 
-FROM ubuntu:14.04
-MAINTAINER Rabit <home@rabits.org> (@rabits)
+FROM ubuntu:14.04.4
+MAINTAINER Ali Diouri <alidiouri@gmail.com> (@rabits)
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV QT_PATH /opt/Qt
-ENV QT_ANDROID ${QT_PATH}/5.4/android_armv7
+ENV QT_ANDROID ${QT_PATH}/5.6/android_armv7
 ENV ANDROID_HOME /opt/android-sdk-linux
 ENV ANDROID_SDK_ROOT ${ANDROID_HOME}
 ENV ANDROID_NDK_ROOT /opt/android-ndk
@@ -42,15 +42,16 @@ RUN sudo dpkg --add-architecture i386 && apt-get -qq update && apt-get -qq dist-
     libncurses5:i386 \
     libstdc++6:i386 \
     libz1:i386 \
+    unzip \
     && apt-get -qq clean
 
 # Download & unpack Qt 5.4 toolchains & clean
 RUN mkdir -p /tmp/qt \
-    && curl -Lo /tmp/qt/installer.run 'http://download.qt-project.org/official_releases/qt/5.4/5.4.2/qt-opensource-linux-x64-android-5.4.2.run' \
+    && curl -Lo /tmp/qt/installer.run 'http://download.qt.io/official_releases/qt/5.6/5.6.0/qt-opensource-linux-x64-android-5.6.0.run' \
     && chmod +x /tmp/qt/installer.run && /tmp/qt/installer.run --dump-binary-data -o /tmp/qt/data \
     && mkdir $QT_PATH && cd $QT_PATH \
-    && 7zr x /tmp/qt/data/qt.54.android_armv7/5.4.2-0qt5_essentials.7z > /dev/null \
-    && 7zr x /tmp/qt/data/qt.54.android_armv7/5.4.2-0qt5_addons.7z > /dev/null \
+    && 7zr x /tmp/qt/data/qt.56.android_armv7/5.6.0-0qt5_essentials.7z > /dev/null \
+    && 7zr x /tmp/qt/data/qt.56.android_armv7/5.6.0-0qt5_addons.7z > /dev/null \
     && /tmp/qt/installer.run --runoperation QtPatch linux $QT_ANDROID qt5 \
     && rm -rf /tmp/qt
 
@@ -60,6 +61,6 @@ RUN mkdir /tmp/android && curl -Lo /tmp/android/sdk.tgz 'http://dl.google.com/an
     && rm -rf /tmp/android && echo "y" | android update sdk -u -a -t tools,platform-tools,build-tools-21.1.2,$ANDROID_NDK_PLATFORM
 
 # Download & unpack android NDK
-RUN mkdir /tmp/android && cd /tmp/android && curl -Lo ndk.bin 'http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin' \
-    && chmod +x ndk.bin && ./ndk.bin > /dev/null && mv android-ndk-r10e $ANDROID_NDK_ROOT && chmod -R +rX $ANDROID_NDK_ROOT \
+RUN mkdir /tmp/android && cd /tmp/android && curl -Lo ndk.zip 'http://dl.google.com/android/repository/android-ndk-r11b-linux-x86_64.zip' \
+    && unzip ndk.zip  && mv ndk $ANDROID_NDK_ROOT && chmod -R +rX $ANDROID_NDK_ROOT \
     && rm -rf /tmp/android
