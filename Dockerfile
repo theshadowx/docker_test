@@ -2,7 +2,7 @@
 # Image: rabits/qt:5.4-android
 
 FROM ubuntu:14.04.4
-MAINTAINER Ali Diouri <alidiouri@gmail.com> (@rabits)
+MAINTAINER Ali Diouri <alidiouri@gmail.com>
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV QT_PATH /opt/Qt
@@ -46,13 +46,8 @@ RUN sudo dpkg --add-architecture i386 && apt-get -qq update && apt-get -qq dist-
     && apt-get -qq clean
 
 # Download & unpack Qt 5.4 toolchains & clean
-RUN mkdir -p /tmp/qt \
-    && curl -Lo /tmp/qt/installer.run 'http://download.qt.io/official_releases/qt/5.6/5.6.0/qt-opensource-linux-x64-android-5.6.0.run' \
-    && chmod +x /tmp/qt/installer.run && /tmp/qt/installer.run --dump-binary-data -o /tmp/qt/data \
-    && mkdir $QT_PATH && cd $QT_PATH \
-    && 7zr x /tmp/qt/data/qt.56.android_armv7/5.6.0-0qt5_essentials.7z > /dev/null \
-    && 7zr x /tmp/qt/data/qt.56.android_armv7/5.6.0-0qt5_addons.7z > /dev/null \
-    && /tmp/qt/installer.run --runoperation QtPatch linux $QT_ANDROID qt5 \
+COPY Qt5.6.0.7z /tmp/qt/
+RUN 7zr x -o$QT_PATH /tmp/qt/Qt5.6.0.7z \
     && rm -rf /tmp/qt
 
 # Download & unpack android SDK
@@ -62,5 +57,5 @@ RUN mkdir /tmp/android && curl -Lo /tmp/android/sdk.tgz 'http://dl.google.com/an
 
 # Download & unpack android NDK
 RUN mkdir /tmp/android && cd /tmp/android && curl -Lo ndk.zip 'http://dl.google.com/android/repository/android-ndk-r11b-linux-x86_64.zip' \
-    && unzip ndk.zip  && mv ndk $ANDROID_NDK_ROOT && chmod -R +rX $ANDROID_NDK_ROOT \
+    && unzip ndk.zip  && mv android-ndk-r11b $ANDROID_NDK_ROOT && chmod -R +rX $ANDROID_NDK_ROOT \
     && rm -rf /tmp/android
