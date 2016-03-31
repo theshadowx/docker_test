@@ -1,6 +1,3 @@
-# Minimal docker container to build project
-# Image: rabits/qt:5.4-android
-
 FROM ubuntu:14.04.4
 MAINTAINER Ali Diouri <alidiouri@gmail.com>
 
