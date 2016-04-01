@@ -56,3 +56,6 @@ RUN mkdir /tmp/android && curl -Lo /tmp/android/sdk.tgz 'http://dl.google.com/an
 RUN mkdir /tmp/android && cd /tmp/android && curl -Lo ndk.zip 'http://dl.google.com/android/repository/android-ndk-r11b-linux-x86_64.zip' \
     && unzip ndk.zip  && mv android-ndk-r11b $ANDROID_NDK_ROOT && chmod -R +rX $ANDROID_NDK_ROOT \
     && rm -rf /tmp/android
+
+WORKDIR /opt/
+RUN curl https://install.meteor.com/ | sh
