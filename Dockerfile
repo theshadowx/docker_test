@@ -49,7 +49,7 @@ RUN 7zr x -o$QT_PATH /tmp/qt/Qt5.6.0.7z \
 
 # Download & unpack android SDK
 RUN mkdir /tmp/android && curl -Lo /tmp/android/sdk.tgz 'http://dl.google.com/android/android-sdk_r24.4.1-linux.tgz' \
-    && tar --no-same-owner -xf /tmp/android/sdk.tgz -C /opt \
+    && tar --no-same-owner -xf /tmp/android/sdk.tgz -C /opt && mv /opt/android-sdk-linux ${ANDROID_HOME}\
     && rm -rf /tmp/android && echo "y" | android update sdk -u -a -t tools,platform-tools,build-tools-21.1.2,$ANDROID_NDK_PLATFORM
 
 # Download & unpack android NDK
