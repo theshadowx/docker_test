@@ -4,9 +4,9 @@ MAINTAINER Ali Diouri <alidiouri@gmail.com>
 ENV DEBIAN_FRONTEND noninteractive
 ENV QT_PATH /opt/Qt
 ENV QT_ANDROID ${QT_PATH}/5.6/android_armv7
-ENV ANDROID_HOME /opt/android-sdk-linux
+ENV ANDROID_HOME /opt/android_sdk
 ENV ANDROID_SDK_ROOT ${ANDROID_HOME}
-ENV ANDROID_NDK_ROOT /opt/android-ndk
+ENV ANDROID_NDK_ROOT /opt/android_ndk
 ENV ANDROID_NDK_TOOLCHAIN_PREFIX arm-linux-androideabi
 ENV ANDROID_NDK_TOOLCHAIN_VERSION 4.9
 ENV ANDROID_NDK_HOST linux-x86_64
